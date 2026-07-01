@@ -1,0 +1,13 @@
+.env
+.env.*local
+*.pdf
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+node_modules/
+build/
+dist/
+*.db
+.mypy_cache/
+.ruff_cache/

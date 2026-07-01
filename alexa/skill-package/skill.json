@@ -1,0 +1,53 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "en-GB": {
+          "summary": "Ev is a voice assistant for questions, calendar updates, and smart home actions.",
+          "examplePhrases": [
+            "Alexa, open helper eve",
+            "Alexa, ask helper eve what is on my calendar",
+            "Alexa, ask helper eve to turn on the living room light"
+          ],
+          "keywords": [
+            "assistant",
+            "calendar",
+            "smart home"
+          ],
+          "name": "Ev",
+          "description": "Ev is a modular AI voice assistant that can answer questions, check calendar events, and help with supported smart home actions."
+        }
+      },
+      "isAvailableWorldwide": false,
+      "testingInstructions": "Use the Alexa developer console or a device connected to this skill. Ensure the webhook endpoint is reachable over HTTPS.",
+      "category": "PRODUCTIVITY",
+      "distributionMode": "PRIVATE",
+      "distributionCountries": [
+        "GB"
+      ]
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "https://example.local.dev/api/v1/alexa/webhook",
+          "sslCertificateType": "Trusted"
+        }
+      }
+    },
+    "manifestVersion": "1.0",
+    "permissions": [],
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false,
+      "locales": {
+        "en-GB": {
+          "privacyPolicyUrl": "https://example.com/privacy",
+          "termsOfUseUrl": "https://example.com/terms"
+        }
+      }
+    }
+  }
+}

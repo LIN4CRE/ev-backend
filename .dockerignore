@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.git/
+.gitignore
+README.md
+START_HERE.md
+ALEXA_GO_LIVE_CHECKLIST.md
+Makefile
+docker-compose.yml
+data/
+
+scripts/
+windows/
+alexa/

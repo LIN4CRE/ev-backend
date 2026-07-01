@@ -1,0 +1,423 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "helper eve",
+      "intents": [
+        {
+          "name": "AskEvIntent",
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "ask helper eve {query}",
+            "ask helper eve to {query}",
+            "tell helper eve {query}",
+            "help me with {query}",
+            "what do you know about {query}",
+            "search for {query}",
+            "check {query}",
+            "find out {query}",
+            "look up {query}",
+            "can you help with {query}",
+            "I want to know about {query}",
+            "would you {query}",
+            "could you {query}",
+            "do you know {query}",
+            "can you tell me {query}",
+            "tell me about {query}",
+            "I need to know {query}",
+            "explain {query}",
+            "what is {query}",
+            "who is {query}",
+            "where is {query}",
+            "when is {query}",
+            "how do I {query}",
+            "I have a question {query}"
+          ]
+        },
+        {
+          "name": "ControlHomeIntent",
+          "slots": [
+            {
+              "name": "action",
+              "type": "HomeActionType"
+            },
+            {
+              "name": "device",
+              "type": "DeviceType"
+            }
+          ],
+          "samples": [
+            "{action} the {device}",
+            "please {action} the {device}",
+            "can you {action} the {device}",
+            "{action} my {device}",
+            "tell me to {action} the {device}",
+            "help me {action} the {device}",
+            "could you {action} the {device}",
+            "would you {action} the {device}",
+            "check the {device}",
+            "what is the status of the {device}",
+            "{action} {device}",
+            "set the {device} to {action}",
+            "make the {device} {action}",
+            "I want to {action} the {device}",
+            "I need to {action} the {device}",
+            "switch {device} {action}",
+            "turn {device} {action}"
+          ]
+        },
+        {
+          "name": "CalendarQueryIntent",
+          "slots": [
+            {
+              "name": "timeRange",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "what is on my calendar",
+            "what is on my calendar {timeRange}",
+            "what have I got on",
+            "what have I got on {timeRange}",
+            "what events do I have",
+            "what events do I have {timeRange}",
+            "check my schedule",
+            "check my schedule {timeRange}",
+            "what is in my diary",
+            "what is in my diary {timeRange}",
+            "do I have anything on",
+            "do I have anything on {timeRange}",
+            "show my events",
+            "show my events {timeRange}",
+            "list my appointments",
+            "list my appointments {timeRange}",
+            "am I busy {timeRange}",
+            "what is coming up",
+            "what is coming up {timeRange}",
+            "what are my plans",
+            "what are my plans {timeRange}",
+            "show my calendar",
+            "show my calendar {timeRange}"
+          ]
+        },
+        {
+          "name": "YouTubeIntent",
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "show me {query} on YouTube",
+            "play {query} on YouTube",
+            "find {query} on YouTube",
+            "search YouTube for {query}",
+            "show me a video about {query}",
+            "play a video about {query}",
+            "I want to watch {query}",
+            "show me how to {query}",
+            "play a tutorial about {query}",
+            "find a video about {query}"
+          ]
+        },
+        {
+          "name": "WeatherIntent",
+          "slots": [
+            {
+              "name": "location",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "what is the weather",
+            "what is the weather in {location}",
+            "weather forecast",
+            "weather forecast for {location}",
+            "how is the weather today",
+            "how is the weather in {location}",
+            "will it rain today",
+            "will it rain in {location}",
+            "what temperature is it",
+            "what temperature is it in {location}",
+            "is it sunny",
+            "is it sunny in {location}",
+            "weather report",
+            "weather report for {location}"
+          ]
+        },
+        {
+          "name": "SetTimerIntent",
+          "slots": [
+            {
+              "name": "duration",
+              "type": "AMAZON.DURATION"
+            },
+            {
+              "name": "label",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "set a timer for {duration}",
+            "set a {label} timer for {duration}",
+            "start a timer for {duration}",
+            "set timer {duration}",
+            "timer for {duration}",
+            "set a {duration} timer",
+            "set a {duration} timer for {label}",
+            "start a {duration} timer",
+            "start a {duration} timer for {label}",
+            "remind me in {duration}",
+            "set a timer called {label} for {duration}"
+          ]
+        },
+        {
+          "name": "TimerStatusIntent",
+          "slots": [],
+          "samples": [
+            "how much time is left",
+            "how long until the timer goes off",
+            "check my timer",
+            "timer status",
+            "how is my timer doing",
+            "when will the timer finish",
+            "how much time left on the timer"
+          ]
+        },
+        {
+          "name": "CancelTimerIntent",
+          "slots": [],
+          "samples": [
+            "cancel the timer",
+            "stop the timer",
+            "dismiss the timer",
+            "turn off the timer",
+            "remove the timer",
+            "end the timer"
+          ]
+        },
+        {
+          "name": "CreateReminderIntent",
+          "slots": [
+            {
+              "name": "reminderContent",
+              "type": "AMAZON.SearchQuery"
+            },
+            {
+              "name": "reminderTime",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "remind me to {reminderContent}",
+            "remind me to {reminderContent} at {reminderTime}",
+            "remind me to {reminderContent} tomorrow",
+            "set a reminder to {reminderContent}",
+            "set a reminder to {reminderContent} at {reminderTime}",
+            "set a reminder for {reminderContent}",
+            "give me a reminder to {reminderContent}",
+            "create a reminder to {reminderContent}",
+            "remind me at {reminderTime} to {reminderContent}",
+            "set a reminder for {reminderTime} to {reminderContent}"
+          ]
+        },
+        {
+          "name": "ReadNotificationsIntent",
+          "slots": [],
+          "samples": [
+            "read my notifications",
+            "check my notifications",
+            "do I have any notifications",
+            "show my notifications",
+            "what notifications do I have",
+            "any new notifications",
+            "read my alerts",
+            "notifications"
+          ]
+        },
+        {
+          "name": "GetNewsIntent",
+          "slots": [
+            {
+              "name": "topic",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "what is the news",
+            "what is the news in {topic}",
+            "give me the news headlines",
+            "news about {topic}",
+            "latest news",
+            "latest news about {topic}",
+            "what is happening",
+            "tell me what is going on in {topic}",
+            "news update",
+            "news update on {topic}",
+            "headlines",
+            "headlines about {topic}",
+            "current events",
+            "current events in {topic}"
+          ]
+        },
+        {
+          "name": "SetVolumeIntent",
+          "slots": [
+            {
+              "name": "level",
+              "type": "VolumeLevel"
+            }
+          ],
+          "samples": [
+            "set volume to {level}",
+            "turn volume to {level}",
+            "volume {level}",
+            "set the volume to {level}",
+            "change volume to {level}",
+            "set the volume level to {level}",
+            "turn the volume down to {level}",
+            "turn the volume up to {level}"
+          ]
+        },
+        {
+          "name": "PlayMusicIntent",
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "play music",
+            "play {query}",
+            "play some music",
+            "play songs",
+            "play {query} by {query}",
+            "play music by {query}",
+            "start playing {query}",
+            "put on {query}",
+            "I want to listen to {query}",
+            "play some {query}"
+          ]
+        },
+        {
+          "name": "ShoppingListIntent",
+          "slots": [
+            {
+              "name": "action",
+              "type": "ShoppingListAction"
+            },
+            {
+              "name": "item",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "add {item} to my shopping list",
+            "what is on my shopping list",
+            "add {item} to my list",
+            "shopping list",
+            "show my shopping list",
+            "remove {item} from my shopping list",
+            "add {item}",
+            "put {item} on my shopping list",
+            "put {item} on the list",
+            "clear my shopping list",
+            "read my shopping list"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.YesIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NoIntent",
+          "samples": []
+        }
+      ],
+      "types": [
+        {
+          "name": "HomeActionType",
+          "values": [
+            { "name": { "value": "turn on" } },
+            { "name": { "value": "turn off" } },
+            { "name": { "value": "switch on" } },
+            { "name": { "value": "switch off" } },
+            { "name": { "value": "check" } },
+            { "name": { "value": "enable" } },
+            { "name": { "value": "disable" } }
+          ]
+        },
+        {
+          "name": "DeviceType",
+          "values": [
+            { "name": { "value": "light" } },
+            { "name": { "value": "lights" } },
+            { "name": { "value": "lamp" } },
+            { "name": { "value": "lamps" } },
+            { "name": { "value": "living room light" } },
+            { "name": { "value": "bedroom light" } },
+            { "name": { "value": "kitchen light" } },
+            { "name": { "value": "thermostat" } },
+            { "name": { "value": "fan" } },
+            { "name": { "value": "tv" } },
+            { "name": { "value": "television" } },
+            { "name": { "value": "plug" } },
+            { "name": { "value": "switch" } }
+          ]
+        },
+        {
+          "name": "VolumeLevel",
+          "values": [
+            { "name": { "value": "0" } },
+            { "name": { "value": "1" } },
+            { "name": { "value": "2" } },
+            { "name": { "value": "3" } },
+            { "name": { "value": "4" } },
+            { "name": { "value": "5" } },
+            { "name": { "value": "6" } },
+            { "name": { "value": "7" } },
+            { "name": { "value": "8" } },
+            { "name": { "value": "9" } },
+            { "name": { "value": "10" } }
+          ]
+        },
+        {
+          "name": "ShoppingListAction",
+          "values": [
+            { "name": { "value": "add" } },
+            { "name": { "value": "remove" } },
+            { "name": { "value": "check" } },
+            { "name": { "value": "clear" } },
+            { "name": { "value": "read" } }
+          ]
+        }
+      ]
+    }
+  }
+}
