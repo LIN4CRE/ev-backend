@@ -7,45 +7,58 @@ from fastapi.responses import FileResponse
 
 router = APIRouter(tags=["downloads"])
 
-# Define the downloads directory - adjust path as needed for production
-DOWNLOADS_DIR = Path(__file__).parent.parent.parent.parent / "ev-companion" / "companion" / "release"
+# Absolute path to the directory that holds installer binaries.
+# Resolved at import time so comparisons are stable regardless of cwd.
+DOWNLOADS_DIR = (
+    Path(__file__).parent.parent.parent.parent
+    / "ev-companion"
+    / "companion"
+    / "release"
+).resolve()
+
+# Explicit allow-list; anything not in this set is rejected.
+_ALLOWED_FILES = frozenset(
+    [
+        "Aura-Companion-Portable-1.0.0.exe",
+        "Aura-Companion-Setup-1.0.0.exe",
+    ]
+)
 
 
 @router.get("/downloads/{filename}")
-def download_file(filename: str):
+def download_file(filename: str) -> FileResponse:
     """Download an installer file.
 
     Args:
-        filename: The name of the file to download (e.g., Aura-Companion-Portable-1.0.0.exe)
+        filename: The name of the file to download.
 
     Returns:
         The file as a downloadable attachment.
 
     Raises:
-        HTTPException: If the file is not found or the filename is invalid.
+        HTTPException 404: If the filename is not in the allow-list or does not exist.
+        HTTPException 403: If the resolved path escapes the downloads directory
+            (directory-traversal guard).
     """
-    # Validate filename to prevent directory traversal attacks
-    allowed_files = [
-        "Aura-Companion-Portable-1.0.0.exe",
-        "Aura-Companion-Setup-1.0.0.exe",
-    ]
-
-    if filename not in allowed_files:
+    # Allow-list check — reject unknown filenames before touching the FS.
+    # The allow-list makes the path-traversal check redundant since every entry
+    # is a plain filename inside DOWNLOADS_DIR.  We keep the traversal guard
+    # anyway as defense-in-depth for any future dynamic entries.
+    if filename not in _ALLOWED_FILES:
         raise HTTPException(status_code=404, detail="File not found")
 
-    file_path = DOWNLOADS_DIR / filename
+    file_path = (DOWNLOADS_DIR / filename).resolve()
 
-    # Verify the file exists
+    if not str(file_path).startswith(str(DOWNLOADS_DIR)):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # Existence check.
     if not file_path.exists() or not file_path.is_file():
         raise HTTPException(status_code=404, detail=f"File not found: {filename}")
-
-    # Verify the file is within the downloads directory (security check)
-    if not str(file_path.resolve()).startswith(str(DOWNLOADS_DIR.resolve())):
-        raise HTTPException(status_code=403, detail="Access denied")
 
     return FileResponse(
         path=file_path,
         filename=filename,
         media_type="application/octet-stream",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )

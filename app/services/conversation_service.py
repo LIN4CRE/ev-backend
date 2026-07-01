@@ -19,6 +19,7 @@ from app.models.tooling import ToolResult
 from app.services.assistant_service import AssistantService
 from app.services.dev_setup_service import DevSetupService
 from app.services.memory_service import ConversationMemory
+from app.services.sse_service import broadcast_state_change
 from app.services.tool_service import ToolRegistry
 
 _BUILTIN_PROMPTS = {
@@ -50,6 +51,10 @@ class ResponseCache:
     def set(self, key: str, value: str) -> None:
         self._cache[key] = (value, time.time() + self._ttl)
 
+    def invalidate(self, key: str) -> None:
+        """Remove a single key from the cache if present."""
+        self._cache.pop(key, None)
+
 
 class ConversationService:
     """Coordinates Alexa requests, memory, tools, and AI-generated responses."""
@@ -72,8 +77,8 @@ class ConversationService:
             return await self._launch_request(envelope)
 
         if request_type == "SessionEndedRequest":
-            # Clear launch cache so the next session gets a fresh greeting broadcast
-            self._response_cache._cache.pop("launch", None)
+            # Clear the cached launch response so the next session gets a fresh greeting.
+            self._response_cache.invalidate("launch")
             return await self._build_response(
                 text="Goodbye.",
                 should_end_session=True,
@@ -396,23 +401,25 @@ class ConversationService:
             device = system.get("device", {})
             supported = device.get("supportedInterfaces", {})
             if "Alexa.Presentation.HTML" in supported:
-                from app.models.alexa import AlexaHtmlHandleMessageDirective, AlexaHtmlStartDirective
+                from app.models.alexa import (
+                    AlexaHtmlHandleMessageDirective,
+                    AlexaHtmlStartDirective,
+                )
                 if envelope.request.type == "LaunchRequest":
-                    # Start the HTML5 companion view on the Echo Show screen
+                    # Start the HTML5 companion view on the Echo Show screen.
                     return AlexaHtmlStartDirective(
                         request={
                             "uri": f"{self._base_url.rstrip('/')}/?view=echoshow",
-                            "method": "GET"
+                            "method": "GET",
                         }
                     )
-                else:
-                    # Update animated character speech & subtitles in real-time
-                    return AlexaHtmlHandleMessageDirective(
-                        message={
-                            "text": text,
-                            "expression": "talking"
-                        }
-                    )
+                # Update animated character speech & subtitles in real-time.
+                return AlexaHtmlHandleMessageDirective(
+                    message={
+                        "text": text,
+                        "expression": "talking",
+                    }
+                )
         return self._build_apl_eve_visuals_directive(text)
 
     async def _build_response(
@@ -426,15 +433,13 @@ class ConversationService:
         import datetime
         import logging
 
-        from app.api.routes.evbot import broadcast_state_change
-
         _logger = logging.getLogger(__name__)
         try:
             await broadcast_state_change(
                 "alexa_event",
                 {
                     "id": f"alexa-{int(time.time() * 1000)}",
-                    "timestamp": datetime.datetime.now().isoformat(),
+                    "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
                     "phrase": text,
                     "status": "success",
                     "actionTaken": text,

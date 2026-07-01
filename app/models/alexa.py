@@ -107,6 +107,13 @@ class AlexaHtmlStartDirective(AlexaDirective):
     configuration: dict[str, Any] = Field(default_factory=lambda: {"timeoutInSeconds": 300})
 
 
+class AlexaHtmlHandleMessageDirective(AlexaDirective):
+    """Directive to send a message to a running HTML5 web app on screen-enabled devices."""
+
+    type: str = "Alexa.Presentation.HTML.HandleMessage"
+    message: dict[str, Any] = Field(default_factory=dict)
+
+
 class AlexaResponseBody(BaseModel):
     """Alexa response body."""
 

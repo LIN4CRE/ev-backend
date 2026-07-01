@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
 from abc import ABC, abstractmethod
 
 import httpx
 
 from app.core.config import Settings, get_settings
 from app.models.tooling import AssistantPlan, ToolResult
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AIClient(ABC):
@@ -189,7 +192,8 @@ class OpenAIClient(AIClient):
                 response.raise_for_status()
                 body = response.json()
             return body["choices"][0]["message"]["content"].strip()
-        except Exception:
+        except Exception as exc:
+            _LOGGER.warning("OpenAI chat completion failed: %s", exc)
             return "Sorry, I couldn't reach the AI right now. Please try again in a moment."
 
     async def _request_text(self, system_prompt: str, user_prompt: str) -> str | None:
@@ -217,7 +221,8 @@ class OpenAIClient(AIClient):
                 )
                 response.raise_for_status()
                 body = response.json()
-        except Exception:
+        except Exception as exc:  # pragma: no cover – network errors handled upstream
+            _LOGGER.warning("OpenAI _request_text failed: %s", exc)
             return None
 
         output = body.get("output", [])
@@ -323,7 +328,8 @@ class OllamaClient(AIClient):
                 response.raise_for_status()
                 body = response.json()
             return (body.get("message") or {}).get("content", "").strip()
-        except Exception:
+        except Exception as exc:  # pragma: no cover – network errors handled upstream
+            _LOGGER.warning("Ollama chat completion failed: %s", exc)
             return "Sorry, I couldn't reach the AI right now. Please try again in a moment."
 
     async def _request_chat(self, system_prompt: str, user_prompt: str) -> str | None:
@@ -344,7 +350,8 @@ class OllamaClient(AIClient):
                 )
                 response.raise_for_status()
                 body = response.json()
-        except Exception:
+        except Exception as exc:  # pragma: no cover – network errors handled upstream
+            _LOGGER.warning("Ollama _request_chat failed: %s", exc)
             return None
         return (body.get("message") or {}).get("content", "").strip() or None
 
@@ -388,12 +395,14 @@ class GeminiClient(AIClient):
                 )
                 response.raise_for_status()
                 body = response.json()
-        except Exception:
+        except Exception as exc:
+            _LOGGER.warning("Gemini _request failed: %s", exc)
             return None
 
         try:
             return body["candidates"][0]["content"]["parts"][0]["text"].strip()
-        except (KeyError, IndexError):
+        except (KeyError, IndexError) as exc:
+            _LOGGER.warning("Gemini _request unexpected response shape: %s", exc)
             return None
 
     async def generate_assistant_reply(self, messages: list[dict]) -> str:

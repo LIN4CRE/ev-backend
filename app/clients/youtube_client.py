@@ -95,7 +95,7 @@ class YouTubeClient:
 
 async def _run_ytdl(ydl: Any, query: str) -> dict[str, Any]:
     """Run yt-dlp extraction in a thread pool to avoid blocking the event loop."""
-    return await asyncio.get_event_loop().run_in_executor(
+    return await asyncio.get_running_loop().run_in_executor(
         None, functools.partial(ydl.extract_info, query, download=False)
     )
 

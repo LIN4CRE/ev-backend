@@ -1,13 +1,11 @@
 """EV-Bot unified endpoints — replaces server.ts for mobile/desktop consumers."""
 
-import asyncio
-import json
-
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
 from app.core.auth import require_admin_access
 from app.services.memory_service import ConversationMemory, get_memory_provider
+from app.services.sse_service import broadcast_state_change, sse_event_publisher
 
 router = APIRouter(
     prefix="/evbot",
@@ -104,36 +102,12 @@ def evbot_health(request: Request) -> dict:
     return {"status": "healthy", "service": "ev-backend"}
 
 
-# SSE event bus — clients subscribe and receive state updates
-_sse_clients: list[asyncio.Queue] = []
-
-
-async def _sse_event_publisher(request: Request) -> None:
-    """Yield SSE-formatted events to all connected clients."""
-    queue: asyncio.Queue = asyncio.Queue()
-    _sse_clients.append(queue)
-    try:
-        while True:
-            data = await queue.get()
-            yield f"data: {json.dumps(data)}\n\n"
-    except asyncio.CancelledError:
-        pass
-    finally:
-        _sse_clients.remove(queue)
-
-
-async def broadcast_state_change(event_type: str, payload: dict) -> None:
-    """Push a state-change event to all subscribed SSE clients."""
-    message = {"type": event_type, **payload}
-    for queue in _sse_clients:
-        await queue.put(message)
-
-
 @router.get("/events")
 async def sse_event_stream(request: Request):
     """Server-Sent Events endpoint — replaces 30s polling with push."""
+    _ = request
     return StreamingResponse(
-        _sse_event_publisher(request),
+        sse_event_publisher(),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

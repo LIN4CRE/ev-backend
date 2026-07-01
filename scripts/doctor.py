@@ -79,7 +79,9 @@ def main() -> None:
     for _, line in results:
         print(line)
 
-    if not all(ok for ok, _ in results if "ngrok CLI" not in _):
+    # Optional checks (ngrok) must not cause a non-zero exit.
+    required_results = [ok for ok, label in results if "ngrok CLI" not in label]
+    if not all(required_results):
         raise SystemExit(1)
 
     print("Environment doctor checks completed.")

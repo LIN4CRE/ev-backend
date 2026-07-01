@@ -62,8 +62,10 @@ class AlexaSignatureVerifier:
         self._validate_cert_url(cert_chain_url)
         certificate_pem = await self._download_certificate(cert_chain_url)
         certificate = x509.load_pem_x509_certificate(certificate_pem)
-        expires_ttl = (certificate.not_valid_after_utc - certificate.not_valid_before_utc).total_seconds()
-        self._cert_cache.set(cert_chain_url, certificate_pem, expires_ttl)
+
+        # Validation is done against the parsed certificate object.  The cache
+        # was already populated inside _download_certificate so it is available
+        # for subsequent requests.
         self._validate_certificate(certificate)
 
         signature = base64.b64decode(signature_b64)
@@ -74,8 +76,11 @@ class AlexaSignatureVerifier:
                 detail="Alexa certificate public key type is invalid.",
             )
 
+        # Amazon requires SHA1 for Alexa request signature verification per
+        # the Alexa Skills Kit documentation.  SHA1 is intentionally used here
+        # and is not a free choice — changing it would break verification.
         try:
-            public_key.verify(signature, raw_body, padding.PKCS1v15(), hashes.SHA1())
+            public_key.verify(signature, raw_body, padding.PKCS1v15(), hashes.SHA1())  # noqa: S303
         except Exception as exc:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -105,6 +110,8 @@ class AlexaSignatureVerifier:
         """Download the Alexa signing certificate chain.
 
         Returns a cached copy if available and still valid (typically 30+ day TTL).
+        On first fetch, populates the cache so subsequent calls skip the network
+        round-trip.
         """
         cached = self._cert_cache.get(cert_chain_url)
         if cached is not None:
@@ -112,7 +119,12 @@ class AlexaSignatureVerifier:
         async with httpx.AsyncClient(timeout=self._timeout_seconds) as client:
             response = await client.get(cert_chain_url)
             response.raise_for_status()
-            return response.content
+            pem_data = response.content
+        # Parse to compute TTL from actual certificate validity range.
+        cert = x509.load_pem_x509_certificate(pem_data)
+        ttl = (cert.not_valid_after_utc - cert.not_valid_before_utc).total_seconds()
+        self._cert_cache.set(cert_chain_url, pem_data, ttl)
+        return pem_data
 
     def _validate_certificate(self, certificate: x509.Certificate) -> None:
         """Validate certificate subject and expiration boundaries."""

@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     port: int = Field(default=8000, ge=1, le=65535, description="Bind port for the API server.")
 
     admin_api_key: str = Field(
-        default="change-me-in-production",
+        default="change-me-in-production!!!",
         min_length=24,
         description="Static admin API key used for protected admin endpoints. Must be at least 24 characters.",
     )
@@ -124,11 +124,28 @@ class Settings(BaseSettings):
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: str | list[str]) -> list[str]:
-        """Accept comma-separated or list-based CORS origin configuration."""
+        """Accept JSON-array, comma-separated, or list-based CORS origin configuration.
+
+        The .env.example ships with JSON syntax (``["http://...","http://..."]``)
+        which pydantic-settings does not automatically deserialise from a plain
+        string field.  We handle that case explicitly here.
+        """
         if isinstance(value, list):
             return value
         if isinstance(value, str):
-            return [item.strip() for item in value.split(",") if item.strip()]
+            stripped = value.strip()
+            # Try JSON array first (e.g. '["http://localhost:3000"]').
+            if stripped.startswith("["):
+                import json as _json
+
+                try:
+                    parsed = _json.loads(stripped)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if item]
+                except _json.JSONDecodeError:
+                    pass
+            # Fall back to comma-separated values.
+            return [item.strip() for item in stripped.split(",") if item.strip()]
         raise ValueError("cors_origins must be a list or comma-separated string")
 
 
