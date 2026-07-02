@@ -8,11 +8,25 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      # Hot-reload app code in development; remove in production for immutable image.
       - ./app:/app/app
+      # Persist SQLite conversation database across container restarts.
+      - ev-data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 15s
+    # Resource guardrails — prevents runaway memory on small VMs.
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+volumes:
+  # Named volume so data survives `docker compose down` without --volumes.
+  ev-data:

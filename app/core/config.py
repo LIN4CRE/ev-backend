@@ -14,10 +14,13 @@ class Settings(BaseSettings):
     """Validated application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Load local .env first, then fall back to the project root .env.
+        # This allows the centralised root .env to be the single source of
+        # truth while still permitting per-component overrides.
+        env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
-        extra="forbid",
+        extra="ignore",
     )
 
     app_name: str = Field(default="Ev Backend", description="Human-readable app name.")
