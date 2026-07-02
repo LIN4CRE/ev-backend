@@ -5,6 +5,7 @@ from fastapi import HTTPException
 
 from app.core.auth import ApiKeyAdminAuthenticator
 from app.core.config import get_settings
+from tests.conftest import TEST_ADMIN_API_KEY
 
 
 @pytest.mark.asyncio
@@ -20,4 +21,4 @@ async def test_api_key_admin_authenticator_rejects_missing_key() -> None:
 async def test_api_key_admin_authenticator_accepts_valid_key() -> None:
     """Verify the configured admin API key is accepted."""
     authenticator = ApiKeyAdminAuthenticator(get_settings())
-    await authenticator.authenticate("change-me-in-production!!!")
+    await authenticator.authenticate(TEST_ADMIN_API_KEY)

@@ -11,7 +11,7 @@ client = TestClient(app)
 def test_chat_endpoint_rate_limiting() -> None:
     """Verify the chat endpoint rate limits after too many requests."""
     # Reset the rate limiter state for a clean test
-    chat_rate_limiter._requests.clear()
+    chat_rate_limiter.reset()
     
     # We will simulate multiple requests from the same client IP
     # Under test client, client host is testclient
@@ -32,4 +32,4 @@ def test_chat_endpoint_rate_limiting() -> None:
     assert response.json()["detail"] == "Rate limit exceeded."
     
     # Clean up rate limiter state after test
-    chat_rate_limiter._requests.clear()
+    chat_rate_limiter.reset()

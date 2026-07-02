@@ -5,9 +5,4 @@ httpx==0.28.1
 structlog==25.4.0
 cryptography==45.0.5
 yt-dlp==2026.6.9
-pytest==8.4.1
-pytest-cov==6.2.1
-pytest-asyncio==1.0.0
-ruff==0.12.2
-mypy==1.16.1
 aiofiles==24.1.0

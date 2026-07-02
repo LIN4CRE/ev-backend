@@ -1,5 +1,8 @@
 """EV-Bot unified endpoints — replaces server.ts for mobile/desktop consumers."""
 
+import uuid
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
@@ -39,8 +42,8 @@ async def trigger_alexa_action(
     phrase = body.get("phrase", "")
     return {
         "event": {
-            "id": f"evbot-{hash(phrase)}",
-            "timestamp": str(__import__("datetime").datetime.now()),
+            "id": f"evbot-{uuid.uuid4()}",
+            "timestamp": datetime.now(UTC).isoformat(),
             "phrase": phrase,
             "status": "forwarded",
             "actionTaken": "Forwarded to Alexa skill",
@@ -62,7 +65,7 @@ async def create_macro(request: Request) -> dict:
     body = await request.json()
     return {
         "macro": {
-            "id": f"macro-{hash(str(body))}",
+            "id": f"macro-{uuid.uuid4()}",
             **body,
         }
     }

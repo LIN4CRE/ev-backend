@@ -11,11 +11,15 @@ class SystemService:
         self._settings = settings
 
     def get_health(self) -> dict:
-        """Return a basic health payload suitable for liveness checks."""
+        """Return a basic health payload suitable for liveness checks.
+
+        The environment name is intentionally omitted from this public
+        endpoint to avoid unnecessary information disclosure; it remains
+        available via the authenticated admin config summary.
+        """
         return {
             "status": "ok",
             "service": self._settings.app_name,
-            "environment": self._settings.environment,
         }
 
     def get_safe_config_summary(self) -> dict:

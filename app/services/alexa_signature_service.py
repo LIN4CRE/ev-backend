@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import threading
 import time
 from urllib.parse import urlparse
 
@@ -23,19 +24,22 @@ class CertificateCache:
 
     def __init__(self) -> None:
         self._cache: dict[str, tuple[bytes, float]] = {}
+        self._lock = threading.Lock()
 
     def get(self, url: str) -> bytes | None:
-        entry = self._cache.get(url)
-        if entry is None:
-            return None
-        data, expires_at = entry
-        if time.time() > expires_at:
-            del self._cache[url]
-            return None
-        return data
+        with self._lock:
+            entry = self._cache.get(url)
+            if entry is None:
+                return None
+            data, expires_at = entry
+            if time.time() > expires_at:
+                del self._cache[url]
+                return None
+            return data
 
     def set(self, url: str, data: bytes, ttl_seconds: float) -> None:
-        self._cache[url] = (data, time.time() + ttl_seconds)
+        with self._lock:
+            self._cache[url] = (data, time.time() + ttl_seconds)
 
 
 class AlexaSignatureVerifier:

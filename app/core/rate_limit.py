@@ -27,6 +27,12 @@ class InMemoryRateLimiter:
         self._lock = Lock()
         self._check_count = 0
 
+    def reset(self) -> None:
+        """Clear all tracked request state. Intended for use in tests."""
+        with self._lock:
+            self._requests.clear()
+            self._check_count = 0
+
     def check(self, key: str) -> None:
         """Raise if the key exceeds the configured request budget."""
         now = time()

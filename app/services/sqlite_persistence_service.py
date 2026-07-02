@@ -5,7 +5,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 from sqlite3 import Connection
-from threading import Lock
+from threading import RLock
 
 DEFAULT_MAX_MESSAGES_PER_SESSION = 100
 
@@ -18,7 +18,7 @@ class SQLiteConversationStore:
         self._database_path = database_path
         self._max_messages = max_messages
         Path(database_path).parent.mkdir(parents=True, exist_ok=True)
-        self._lock = Lock()
+        self._lock = RLock()
         self._connection: Connection | None = None
         self._initialize_schema()
 
@@ -69,7 +69,7 @@ class SQLiteConversationStore:
                 (session_id, role, content),
             )
             self._get_connection().commit()
-        self._enforce_message_limit(session_id)
+            self._enforce_message_limit(session_id)
 
     def get_messages(self, session_id: str) -> list[dict]:
         """Return all messages for a session in insertion order."""

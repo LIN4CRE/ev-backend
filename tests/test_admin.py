@@ -4,16 +4,15 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.services.memory_service import get_memory_provider
+from tests.conftest import TEST_ADMIN_API_KEY
 
 client = TestClient(app)
+ADMIN_HEADERS = {"X-Admin-Api-Key": TEST_ADMIN_API_KEY}
 
 
 def test_admin_tools_endpoint_returns_registered_tools() -> None:
     """Verify the admin tools endpoint exposes the available tools."""
-    response = client.get(
-        "/api/v1/admin/tools",
-        headers={"X-Admin-Api-Key": "change-me-in-production!!!"},
-    )
+    response = client.get("/api/v1/admin/tools", headers=ADMIN_HEADERS)
     assert response.status_code == 200
     payload = response.json()
     assert any(tool["name"] == "web_search" for tool in payload["tools"])
@@ -25,17 +24,14 @@ def test_admin_memory_endpoints_return_session_data() -> None:
     memory.append_message("session-admin-test", "user", "hello")
     memory.append_message("session-admin-test", "assistant", "hi there")
 
-    list_response = client.get(
-        "/api/v1/admin/memory/sessions",
-        headers={"X-Admin-Api-Key": "change-me-in-production!!!"},
-    )
+    list_response = client.get("/api/v1/admin/memory/sessions", headers=ADMIN_HEADERS)
     assert list_response.status_code == 200
     assert "session-admin-test" in list_response.json()["sessions"]
 
     detail_response = client.get(
         "/api/v1/admin/memory/session",
         params={"session_id": "session-admin-test"},
-        headers={"X-Admin-Api-Key": "change-me-in-production!!!"},
+        headers=ADMIN_HEADERS,
     )
     assert detail_response.status_code == 200
     payload = detail_response.json()

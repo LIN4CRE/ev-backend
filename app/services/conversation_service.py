@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from typing import Any
+from urllib.parse import urlparse
 
 from app.clients.openai_client import AIClient
 from app.core.config import get_settings
@@ -21,6 +22,33 @@ from app.services.dev_setup_service import DevSetupService
 from app.services.memory_service import ConversationMemory
 from app.services.sse_service import broadcast_state_change
 from app.services.tool_service import ToolRegistry
+
+# Hostnames (or parent domains) permitted as APL video sources. yt-dlp resolves
+# YouTube playback to *.googlevideo.com stream URLs; the canonical YouTube
+# domains are allowed as well.
+_ALLOWED_VIDEO_DOMAINS = (
+    "googlevideo.com",
+    "youtube.com",
+    "youtu.be",
+    "ytimg.com",
+)
+
+
+def _is_safe_video_url(url: str) -> bool:
+    """Return True only for HTTPS URLs on a known YouTube/Google video domain.
+
+    Prevents an unexpected or malicious URL (e.g. from yt-dlp output) from being
+    injected verbatim into the APL document sent to the Echo Show device.
+    """
+    try:
+        parsed = urlparse(url)
+    except (ValueError, TypeError):
+        return False
+    if parsed.scheme != "https" or not parsed.hostname:
+        return False
+    host = parsed.hostname.lower()
+    return any(host == domain or host.endswith("." + domain) for domain in _ALLOWED_VIDEO_DOMAINS)
+
 
 _BUILTIN_PROMPTS = {
     "AMAZON.HelpIntent": "The user just asked for help on a voice assistant. Give a friendly, concise list of things they can ask about: questions, web search, calendar, smart home control, timers, reminders, weather, news, music. Keep it under 30 words since this is spoken aloud.",
@@ -213,7 +241,7 @@ class ConversationService:
                 data = result.data
                 playable_url = data.get("direct_url") or data.get("playable_url")
                 results = data.get("results", [])
-                if playable_url and results:
+                if playable_url and results and _is_safe_video_url(playable_url):
                     title = results[0].get("title", "YouTube Video")
                     return [self._build_apl_video_directive(title, playable_url)]
         return []

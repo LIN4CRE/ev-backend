@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes.admin import router as admin_router
 from app.api.routes.alexa import router as alexa_router
 from app.api.routes.alexa_improved import router as alexa_improved_router
+from app.api.routes.alexa_improved import skill_manager
 from app.api.routes.chat import router as chat_router
 from app.api.routes.downloads import router as downloads_router
 from app.api.routes.evbot import router as evbot_router
@@ -36,6 +37,7 @@ async def lifespan(app: FastAPI):
     yield
     logger.info("application_stopping", app_name=settings.app_name, environment=settings.environment)
     close_memory_provider()
+    skill_manager.close()
 
 
 app = FastAPI(
