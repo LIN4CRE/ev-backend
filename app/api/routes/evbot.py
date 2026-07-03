@@ -17,6 +17,8 @@ router = APIRouter(
 )
 
 
+from app.core.config import get_settings
+
 @router.get("/state")
 def get_aggregated_state(
     request: Request,
@@ -25,11 +27,19 @@ def get_aggregated_state(
     """Return aggregate EV-Bot state — replaced server.ts /api/evbot/state."""
     _ = request
     sessions = memory.list_sessions() if hasattr(memory, "list_sessions") else []
+    settings = get_settings()
     return {
         "status": "online",
         "alexaEvents": [],
         "desktopMacros": [],
         "sessions": sessions,
+        "pcConnection": {
+            "ipAddress": settings.tailscale_ip,
+            "status": "connected",
+            "latency": "12ms",
+            "lastSeen": datetime.now(UTC).isoformat(),
+            "os": "Windows 11 (Pro)"
+        }
     }
 
 

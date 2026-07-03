@@ -31,6 +31,7 @@ class Settings(BaseSettings):
 
     host: str = Field(default="0.0.0.0", description="Bind host for the API server.")
     port: int = Field(default=8000, ge=1, le=65535, description="Bind port for the API server.")
+    tailscale_ip: str = Field(default="100.91.217.7", description="Tailscale IP of the host PC.")
 
     admin_api_key: str = Field(
         default="change-me-in-production!!!",
