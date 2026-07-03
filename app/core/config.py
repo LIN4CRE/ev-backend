@@ -6,7 +6,7 @@ application can depend on a single validated settings object.
 
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -93,6 +93,16 @@ class Settings(BaseSettings):
         if normalized not in allowed:
             raise ValueError(f"environment must be one of: {', '.join(sorted(allowed))}")
         return normalized
+
+    @model_validator(mode="after")
+    def validate_admin_key_production(self) -> "Settings":
+        """Verify that the default admin key is not used in production."""
+        if self.environment == "production" and "change-me" in self.admin_api_key.lower():
+            raise ValueError(
+                "ADMIN_API_KEY cannot contain default 'change-me' placeholders in a production environment. "
+                "Please configure a secure API key."
+            )
+        return self
 
     @field_validator("log_level")
     @classmethod

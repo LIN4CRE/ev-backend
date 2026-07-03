@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import datetime
+import logging
 import time
 from typing import Any
 from urllib.parse import urlparse
@@ -10,6 +12,8 @@ from app.clients.openai_client import AIClient
 from app.core.config import get_settings
 from app.models.alexa import (
     AlexaAplRenderDocumentDirective,
+    AlexaHtmlHandleMessageDirective,
+    AlexaHtmlStartDirective,
     AlexaPlainTextOutputSpeech,
     AlexaReprompt,
     AlexaRequestEnvelope,
@@ -322,6 +326,8 @@ class ConversationService:
 
     def _build_apl_video_directive(self, title: str, video_url: str) -> AlexaAplRenderDocumentDirective:
         """Build an APL RenderDocument directive for playing a video on Echo Show."""
+        if not _is_safe_video_url(video_url):
+            raise ValueError("Unsafe video URL domain detected")
         return AlexaAplRenderDocumentDirective(
             token="ev-youtube-video",
             document={
@@ -429,10 +435,6 @@ class ConversationService:
             device = system.get("device", {})
             supported = device.get("supportedInterfaces", {})
             if "Alexa.Presentation.HTML" in supported:
-                from app.models.alexa import (
-                    AlexaHtmlHandleMessageDirective,
-                    AlexaHtmlStartDirective,
-                )
                 if envelope.request.type == "LaunchRequest":
                     # Start the HTML5 companion view on the Echo Show screen.
                     return AlexaHtmlStartDirective(
@@ -458,8 +460,6 @@ class ConversationService:
         directives: list | None = None,
     ) -> AlexaResponseEnvelope:
         """Build a valid Alexa response envelope and broadcast to companion app."""
-        import datetime
-        import logging
 
         _logger = logging.getLogger(__name__)
         try:
