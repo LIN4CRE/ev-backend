@@ -12,8 +12,9 @@ TEST_ADMIN_API_KEY = "test-admin-key-not-for-production"
 os.environ["ADMIN_API_KEY"] = TEST_ADMIN_API_KEY
 
 
-import pytest
-from app.core.rate_limit import admin_rate_limiter, chat_rate_limiter
+import pytest  # noqa: E402
+
+from app.core.rate_limit import admin_rate_limiter, chat_rate_limiter  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -21,6 +22,3 @@ def reset_rate_limiters() -> None:
     """Ensure rate limiter state is reset between tests."""
     admin_rate_limiter.reset()
     chat_rate_limiter.reset()
-
-
-

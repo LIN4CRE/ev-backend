@@ -55,19 +55,36 @@ def _is_safe_video_url(url: str) -> bool:
 
 
 _BUILTIN_PROMPTS = {
-    "AMAZON.HelpIntent": "The user just asked for help on a voice assistant. Give a friendly, concise list of things they can ask about: questions, web search, calendar, smart home control, timers, reminders, weather, news, music. Keep it under 30 words since this is spoken aloud.",
-    "AMAZON.YesIntent": "The user just said 'yes'. Respond briefly and invite them to tell you what they need. Keep it under 15 words.",
-    "AMAZON.NoIntent": "The user just said 'no'. Acknowledge politely and let them know you're here if they need anything. Keep it under 15 words.",
-    "AMAZON.NavigateHomeIntent": "The user asked to go back to the main menu. Greet them and briefly remind them what you can do. Keep it under 20 words.",
-    "AMAZON.FallbackIntent": "The user said something you couldn't understand. Apologize briefly and remind them of the main capabilities. Keep it under 25 words.",
+    "AMAZON.HelpIntent": (
+        "The user just asked for help on a voice assistant. Give a friendly, concise list of "
+        "things they can ask about: questions, web search, calendar, smart home control, timers, "
+        "reminders, weather, news, music. Keep it under 30 words since this is spoken aloud."
+    ),
+    "AMAZON.YesIntent": (
+        "The user just said 'yes'. Respond briefly and invite them to tell you what they need. "
+        "Keep it under 15 words."
+    ),
+    "AMAZON.NoIntent": (
+        "The user just said 'no'. Acknowledge politely and let them know you're here if they "
+        "need anything. Keep it under 15 words."
+    ),
+    "AMAZON.NavigateHomeIntent": (
+        "The user asked to go back to the main menu. Greet them and briefly remind them what "
+        "you can do. Keep it under 20 words."
+    ),
+    "AMAZON.FallbackIntent": (
+        "The user said something you couldn't understand. Apologize briefly and remind them of "
+        "the main capabilities. Keep it under 25 words."
+    ),
 }
 
 
 class ResponseCache:
-    """Simple in-memory TTL cache for LLM responses."""
+    """Simple in-memory TTL cache for LLM responses, capped at max_entries."""
 
-    def __init__(self, ttl_seconds: float = 300.0) -> None:
+    def __init__(self, ttl_seconds: float = 300.0, max_entries: int = 256) -> None:
         self._ttl = ttl_seconds
+        self._max_entries = max_entries
         self._cache: dict[str, tuple[str, float]] = {}
 
     def get(self, key: str) -> str | None:
@@ -81,7 +98,16 @@ class ResponseCache:
         return value
 
     def set(self, key: str, value: str) -> None:
-        self._cache[key] = (value, time.time() + self._ttl)
+        now = time.time()
+        if key not in self._cache and len(self._cache) >= self._max_entries:
+            # Purge expired entries first; if still full, evict the soonest-expiring.
+            expired = [k for k, (_, expires_at) in self._cache.items() if now > expires_at]
+            for k in expired:
+                del self._cache[k]
+            if len(self._cache) >= self._max_entries:
+                oldest = min(self._cache, key=lambda k: self._cache[k][1])
+                del self._cache[oldest]
+        self._cache[key] = (value, now + self._ttl)
 
     def invalidate(self, key: str) -> None:
         """Remove a single key from the cache if present."""
@@ -91,7 +117,13 @@ class ResponseCache:
 class ConversationService:
     """Coordinates Alexa requests, memory, tools, and AI-generated responses."""
 
-    def __init__(self, memory: ConversationMemory, ai_client: AIClient, tool_registry: ToolRegistry, base_url: str = "https://ev-bot.uk") -> None:
+    def __init__(
+        self,
+        memory: ConversationMemory,
+        ai_client: AIClient,
+        tool_registry: ToolRegistry,
+        base_url: str = "https://ev-bot.uk",
+    ) -> None:
         """Store required collaborators for conversation processing."""
         self._memory = memory
         self._ai_client = ai_client
@@ -135,7 +167,16 @@ class ConversationService:
                 directives=[self._build_visuals_directive(cached, envelope)],
             )
         text = await self._ai_client.generate_assistant_reply(
-            [{"role": "user", "content": "A user has just opened the EV-Bot voice assistant. Say a warm, concise welcome mentioning the official platform 'ev-bot.uk', and list your main capabilities in 2 sentences."}]
+            [
+                {
+                    "role": "user",
+                    "content": (
+                        "A user has just opened the EV-Bot voice assistant. Say a warm, concise "
+                        "welcome mentioning the official platform 'ev-bot.uk', and list your main "
+                        "capabilities in 2 sentences."
+                    ),
+                }
+            ]
         )
         self._response_cache.set("launch", text)
         return await self._build_response(
@@ -216,7 +257,13 @@ class ConversationService:
             directives=directives,
         )
 
-    async def _builtin_intent_via_llm(self, session_id: str, intent_name: str, prompt: str, envelope: AlexaRequestEnvelope | None = None) -> AlexaResponseEnvelope:
+    async def _builtin_intent_via_llm(
+        self,
+        session_id: str,
+        intent_name: str,
+        prompt: str,
+        envelope: AlexaRequestEnvelope | None = None,
+    ) -> AlexaResponseEnvelope:
         """Generate an LLM-powered response for built-in intents instead of hardcoded text."""
         cached = self._response_cache.get(intent_name)
         if cached:

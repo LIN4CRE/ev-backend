@@ -109,6 +109,11 @@ class AlexaSignatureVerifier:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Alexa certificate URL path is invalid.",
             )
+        if parsed.port is not None and parsed.port != 443:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Alexa certificate URL port is invalid.",
+            )
 
     async def _download_certificate(self, cert_chain_url: str) -> bytes:
         """Download the Alexa signing certificate chain.

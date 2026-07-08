@@ -59,3 +59,34 @@ async def test_conversation_service_handles_help_intent() -> None:
     response = await service.handle_alexa_request(envelope)
     assert response.response.shouldEndSession is False
     assert "calendar" in response.response.outputSpeech.text.lower()
+
+
+def test_response_cache_evicts_when_full() -> None:
+    """Verify the response cache stays within its max_entries bound."""
+    from app.services.conversation_service import ResponseCache
+
+    cache = ResponseCache(ttl_seconds=300.0, max_entries=3)
+    cache.set("a", "1")
+    cache.set("b", "2")
+    cache.set("c", "3")
+    cache.set("d", "4")
+    assert len(cache._cache) == 3
+    assert cache.get("d") == "4"
+    # "a" was the soonest-expiring entry and should have been evicted.
+    assert cache.get("a") is None
+
+
+def test_response_cache_purges_expired_before_evicting() -> None:
+    """Verify expired entries are dropped in preference to live ones."""
+    from app.services.conversation_service import ResponseCache
+
+    cache = ResponseCache(ttl_seconds=300.0, max_entries=2)
+    cache.set("expired", "old")
+    # Force the first entry to be already expired.
+    value, _ = cache._cache["expired"]
+    cache._cache["expired"] = (value, 0.0)
+    cache.set("live", "fresh")
+    cache.set("new", "newest")
+    assert cache.get("expired") is None
+    assert cache.get("live") == "fresh"
+    assert cache.get("new") == "newest"
