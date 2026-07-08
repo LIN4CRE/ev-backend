@@ -80,10 +80,11 @@ _BUILTIN_PROMPTS = {
 
 
 class ResponseCache:
-    """Simple in-memory TTL cache for LLM responses."""
+    """Simple in-memory TTL cache for LLM responses, capped at max_entries."""
 
-    def __init__(self, ttl_seconds: float = 300.0) -> None:
+    def __init__(self, ttl_seconds: float = 300.0, max_entries: int = 256) -> None:
         self._ttl = ttl_seconds
+        self._max_entries = max_entries
         self._cache: dict[str, tuple[str, float]] = {}
 
     def get(self, key: str) -> str | None:
@@ -97,7 +98,16 @@ class ResponseCache:
         return value
 
     def set(self, key: str, value: str) -> None:
-        self._cache[key] = (value, time.time() + self._ttl)
+        now = time.time()
+        if key not in self._cache and len(self._cache) >= self._max_entries:
+            # Purge expired entries first; if still full, evict the soonest-expiring.
+            expired = [k for k, (_, expires_at) in self._cache.items() if now > expires_at]
+            for k in expired:
+                del self._cache[k]
+            if len(self._cache) >= self._max_entries:
+                oldest = min(self._cache, key=lambda k: self._cache[k][1])
+                del self._cache[oldest]
+        self._cache[key] = (value, now + self._ttl)
 
     def invalidate(self, key: str) -> None:
         """Remove a single key from the cache if present."""

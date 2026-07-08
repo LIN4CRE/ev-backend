@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 from abc import ABC, abstractmethod
 
 from fastapi import Header, HTTPException, Request, status
@@ -31,7 +32,8 @@ class ApiKeyAdminAuthenticator(AdminAuthenticator):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Missing admin API key.",
             )
-        if presented_secret != self._settings.admin_api_key:
+        # Constant-time comparison to avoid leaking key material via timing.
+        if not secrets.compare_digest(presented_secret, self._settings.admin_api_key):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Invalid admin API key.",
