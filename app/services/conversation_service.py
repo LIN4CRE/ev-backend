@@ -55,11 +55,27 @@ def _is_safe_video_url(url: str) -> bool:
 
 
 _BUILTIN_PROMPTS = {
-    "AMAZON.HelpIntent": "The user just asked for help on a voice assistant. Give a friendly, concise list of things they can ask about: questions, web search, calendar, smart home control, timers, reminders, weather, news, music. Keep it under 30 words since this is spoken aloud.",
-    "AMAZON.YesIntent": "The user just said 'yes'. Respond briefly and invite them to tell you what they need. Keep it under 15 words.",
-    "AMAZON.NoIntent": "The user just said 'no'. Acknowledge politely and let them know you're here if they need anything. Keep it under 15 words.",
-    "AMAZON.NavigateHomeIntent": "The user asked to go back to the main menu. Greet them and briefly remind them what you can do. Keep it under 20 words.",
-    "AMAZON.FallbackIntent": "The user said something you couldn't understand. Apologize briefly and remind them of the main capabilities. Keep it under 25 words.",
+    "AMAZON.HelpIntent": (
+        "The user just asked for help on a voice assistant. Give a friendly, concise list of "
+        "things they can ask about: questions, web search, calendar, smart home control, timers, "
+        "reminders, weather, news, music. Keep it under 30 words since this is spoken aloud."
+    ),
+    "AMAZON.YesIntent": (
+        "The user just said 'yes'. Respond briefly and invite them to tell you what they need. "
+        "Keep it under 15 words."
+    ),
+    "AMAZON.NoIntent": (
+        "The user just said 'no'. Acknowledge politely and let them know you're here if they "
+        "need anything. Keep it under 15 words."
+    ),
+    "AMAZON.NavigateHomeIntent": (
+        "The user asked to go back to the main menu. Greet them and briefly remind them what "
+        "you can do. Keep it under 20 words."
+    ),
+    "AMAZON.FallbackIntent": (
+        "The user said something you couldn't understand. Apologize briefly and remind them of "
+        "the main capabilities. Keep it under 25 words."
+    ),
 }
 
 
@@ -91,7 +107,13 @@ class ResponseCache:
 class ConversationService:
     """Coordinates Alexa requests, memory, tools, and AI-generated responses."""
 
-    def __init__(self, memory: ConversationMemory, ai_client: AIClient, tool_registry: ToolRegistry, base_url: str = "https://ev-bot.uk") -> None:
+    def __init__(
+        self,
+        memory: ConversationMemory,
+        ai_client: AIClient,
+        tool_registry: ToolRegistry,
+        base_url: str = "https://ev-bot.uk",
+    ) -> None:
         """Store required collaborators for conversation processing."""
         self._memory = memory
         self._ai_client = ai_client
@@ -135,7 +157,16 @@ class ConversationService:
                 directives=[self._build_visuals_directive(cached, envelope)],
             )
         text = await self._ai_client.generate_assistant_reply(
-            [{"role": "user", "content": "A user has just opened the EV-Bot voice assistant. Say a warm, concise welcome mentioning the official platform 'ev-bot.uk', and list your main capabilities in 2 sentences."}]
+            [
+                {
+                    "role": "user",
+                    "content": (
+                        "A user has just opened the EV-Bot voice assistant. Say a warm, concise "
+                        "welcome mentioning the official platform 'ev-bot.uk', and list your main "
+                        "capabilities in 2 sentences."
+                    ),
+                }
+            ]
         )
         self._response_cache.set("launch", text)
         return await self._build_response(
@@ -216,7 +247,13 @@ class ConversationService:
             directives=directives,
         )
 
-    async def _builtin_intent_via_llm(self, session_id: str, intent_name: str, prompt: str, envelope: AlexaRequestEnvelope | None = None) -> AlexaResponseEnvelope:
+    async def _builtin_intent_via_llm(
+        self,
+        session_id: str,
+        intent_name: str,
+        prompt: str,
+        envelope: AlexaRequestEnvelope | None = None,
+    ) -> AlexaResponseEnvelope:
         """Generate an LLM-powered response for built-in intents instead of hardcoded text."""
         cached = self._response_cache.get(intent_name)
         if cached:

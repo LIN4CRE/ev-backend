@@ -39,7 +39,8 @@ def test_launch_request_returns_welcome_message() -> None:
     response = client.post("/api/v1/alexa/webhook", json=payload)
     assert response.status_code == 200
     body = response.json()
-    assert "welcome" in body["response"]["outputSpeech"]["text"].lower() or "opened" in body["response"]["outputSpeech"]["text"].lower() or "hello" in body["response"]["outputSpeech"]["text"].lower()
+    speech = body["response"]["outputSpeech"]["text"].lower()
+    assert "welcome" in speech or "opened" in speech or "hello" in speech
     assert body["response"]["shouldEndSession"] is False
 
 

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
 from app.core.auth import require_admin_access
+from app.core.config import get_settings
 from app.services.memory_service import ConversationMemory, get_memory_provider
 from app.services.sse_service import broadcast_state_change, sse_event_publisher
 
@@ -16,8 +17,6 @@ router = APIRouter(
     dependencies=[Depends(require_admin_access)],
 )
 
-
-from app.core.config import get_settings
 
 @router.get("/state")
 def get_aggregated_state(
@@ -50,15 +49,15 @@ async def trigger_alexa_action(
     """Trigger an Alexa skill action — replaced server.ts /api/alexa/trigger."""
     body = await request.json()
     phrase = body.get("phrase", "")
-    return {
-        "event": {
-            "id": f"evbot-{uuid.uuid4()}",
-            "timestamp": datetime.now(UTC).isoformat(),
-            "phrase": phrase,
-            "status": "forwarded",
-            "actionTaken": "Forwarded to Alexa skill",
-        }
+    event = {
+        "id": f"evbot-{uuid.uuid4()}",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "phrase": phrase,
+        "status": "forwarded",
+        "actionTaken": "Forwarded to Alexa skill",
     }
+    await broadcast_state_change("alexa_event", event)
+    return {"event": event}
 
 
 @router.get("/macros")
@@ -73,12 +72,12 @@ async def create_macro(request: Request) -> dict:
     """Create a desktop macro — replaced server.ts /api/desktop/macros."""
     _ = request
     body = await request.json()
-    return {
-        "macro": {
-            "id": f"macro-{uuid.uuid4()}",
-            **body,
-        }
+    macro = {
+        "id": f"macro-{uuid.uuid4()}",
+        **body,
     }
+    await broadcast_state_change("desktop_macro_created", {"macro": macro})
+    return {"macro": macro}
 
 
 @router.patch("/macros/{macro_id}")
@@ -86,18 +85,19 @@ async def toggle_macro(macro_id: str, request: Request) -> dict:
     """Toggle a macro — replaced server.ts /api/desktop/macros/:id."""
     body = await request.json()
     is_active = body.get("isActive", True)
-    return {
-        "macro": {
-            "id": macro_id,
-            "isActive": is_active,
-        }
+    macro = {
+        "id": macro_id,
+        "isActive": is_active,
     }
+    await broadcast_state_change("desktop_macro_toggled", {"macro": macro})
+    return {"macro": macro}
 
 
 @router.delete("/macros/{macro_id}")
-def delete_macro(macro_id: str, request: Request) -> dict:
+async def delete_macro(macro_id: str, request: Request) -> dict:
     """Delete a macro — replaced server.ts /api/desktop/macros/:id."""
     _ = request
+    await broadcast_state_change("desktop_macro_deleted", {"id": macro_id})
     return {"deleted": macro_id, "ok": True}
 
 
@@ -105,7 +105,9 @@ def delete_macro(macro_id: str, request: Request) -> dict:
 async def report_connection(request: Request) -> dict:
     """Report PC connection state — replaced server.ts /api/connection."""
     body = await request.json()
-    return {"status": "ok", "connected": True, **body}
+    connection = {"status": "ok", "connected": True, **body}
+    await broadcast_state_change("pc_connection", connection)
+    return connection
 
 
 @router.get("/health")
