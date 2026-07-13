@@ -1,3 +1,5 @@
+<p align="center"><img src="https://raw.githubusercontent.com/LIN4CRE/ev-backend/master/.github/banner.png" alt="ev-backend banner" width="100%"></p>
+
 # Ev Backend
 
 Ev is a modular FastAPI backend intended to power an AI voice assistant with Alexa integration.
