@@ -1,5 +1,12 @@
 <p align="center"><img src="https://raw.githubusercontent.com/LIN4CRE/ev-backend/master/.github/banner.png" alt="ev-backend banner" width="100%"></p>
 
+
+<p align="center">
+<img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white">
+<img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white">
+<img src="https://img.shields.io/badge/Alexa-00CAFF?style=flat-square&logo=amazonalexa&logoColor=white">
+<img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square">
+</p>
 # Ev Backend
 
 Ev is a modular FastAPI backend intended to power an AI voice assistant with Alexa integration.
